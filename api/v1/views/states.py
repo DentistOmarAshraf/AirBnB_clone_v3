@@ -65,7 +65,7 @@ def about_states(state_id=None):
             try:
                 data = request.get_json()
             except Exception:
-                return make_response("Not a JSON")
+                return make_response("Not a JSON", 400)
 
             changed = False
             for state in storage.all(State).values():
