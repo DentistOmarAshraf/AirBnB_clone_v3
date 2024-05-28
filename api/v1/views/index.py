@@ -33,7 +33,7 @@ def count_inDB():
             "places": storage.count(Place),
             "reviews": storage.count(Review),
             "states": storage.count(State),
-            "user": storage.count(User)
+            "users": storage.count(User)
             }
     res = make_response(json.dumps(data, indent=2), 200)
     res.headers['Content-type'] = 'application/json'
