@@ -35,6 +35,6 @@ def count_inDB():
             "states": storage.count(State),
             "user": storage.count(User)
             }
-    res = make_response(json.dumps(data, indent=2) + '\n', 200)
+    res = make_response(json.dumps(data, indent=2), 200)
     res.headers['Content-type'] = 'application/json'
     return res
