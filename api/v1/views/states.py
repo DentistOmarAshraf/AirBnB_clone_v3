@@ -29,7 +29,7 @@ def about_states(state_id=None):
                 return make_response("Missing name", 400)
             new_state = State(**data)
             new_state.save()
-            res = make_response(json.dumps(new_state.to_dict(), indent=4), 200)
+            res = make_response(json.dumps(new_state.to_dict(), indent=4), 201)
             res.headers['Content-type'] = 'application/json'
             return res
 
