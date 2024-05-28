@@ -113,3 +113,55 @@ class TestFileStorage(unittest.TestCase):
         with open("file.json", "r") as f:
             js = f.read()
         self.assertEqual(json.loads(string), json.loads(js))
+
+    @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
+    def test_get(self):
+        """Test method get in FileStorage Module"""
+        storage = FileStorage()
+        instance = State()
+        instance.save()
+        retrived = storage.get(State, instance.id)
+        self.assertEqual(retrived, instance)
+        self.assertEqual(retrived.name, instance.name)
+        self.assertIsInstance(retrived, State)
+        instance = City()
+        instance.save()
+        retrived = storage.get(City, instance.id)
+        self.assertEqual(retrived, instance)
+        self.assertIsInstance(retrived, City)
+
+    @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
+    def test_get_error(self):
+        """Test method get in FileStorage raiesing Error"""
+        storage = FileStorage()
+        with self.assertRaises(TypeError):
+            x = storage.get()
+        with self.assertRaises(TypeError):
+            x = storage.get(State, "32434", 10)
+
+    @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
+    def test_get_NoneReturn(self):
+        """Test method get returning none if it didn't find obj"""
+        storage = FileStorage()
+        self.assertEqual(storage.get(State, "999"), None)
+        self.assertEqual(storage.get(None, "20"), None)
+        self.assertEqual(storage.get(State, ""), None)
+
+    @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
+    def test_count(self):
+        """Test method count in FileStorage"""
+        storage = FileStorage()
+        all_count = len(storage.all())
+        self.assertEqual(storage.count(), all_count)
+        self.assertEqual(storage.count(State), len(storage.all(State)))
+        self.assertEqual(storage.count(City), len(storage.all(City)))
+        self.assertEqual(storage.count(Amenity), len(storage.all(Amenity)))
+        self.assertEqual(storage.count(User), len(storage.all(User)))
+        self.assertEqual(storage.count(Place), len(storage.all(Place)))
+
+    @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
+    def test_count_error(self):
+        """Test method count in FileStorage error"""
+        storage = FileStorage()
+        with self.assertRaises(TypeError):
+            x = storage.count(State, "extra arg")

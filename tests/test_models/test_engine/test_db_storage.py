@@ -8,7 +8,7 @@ import inspect
 import models
 from models.engine import db_storage
 from models.amenity import Amenity
-from models.base_model import BaseModel
+from models.base_model import BaseModel, Base
 from models.city import City
 from models.place import Place
 from models.review import Review
@@ -66,6 +66,55 @@ test_db_storage.py'])
                              "{:s} method needs a docstring".format(func[0]))
             self.assertTrue(len(func[1].__doc__) >= 1,
                             "{:s} method needs a docstring".format(func[0]))
+
+    @unittest.skipIf(models.storage_t != 'db', "not testing file storage")
+    def test_get(self):
+        """Test method get in DBstorage module"""
+        storage = DBStorage()
+        storage.reload()
+        instance = State(name="Cairo")
+        instance.save()
+        retrived = storage.get(State, instance.id)
+        self.assertEqual(instance.id, retrived.id)
+        storage.close()
+
+    @unittest.skipIf(models.storage_t != 'db', "not testing file storage")
+    def test_get_error(self):
+        """Test method get Error in DBstorage module"""
+        storage = DBStorage()
+        storage.reload()
+        with self.assertRaises(TypeError):
+            x = storage.get()
+        with self.assertRaises(TypeError):
+            x = storage.get(State, "232", 10)
+
+    @unittest.skipIf(models.storage_t != 'db', "not testing file storage")
+    def test_get_NoneReturn(self):
+        """Test method get returning None"""
+        storage = DBStorage()
+        storage.reload()
+        self.assertEqual(storage.get(State, "999"), None)
+        self.assertEqual(storage.get(None, "20"), None)
+        self.assertEqual(storage.get(State, ""), None)
+
+    @unittest.skipIf(models.storage_t != 'db', "not testing file storage")
+    def test_count(self):
+        """Test method count in DBStorage"""
+        storage = DBStorage()
+        storage.reload()
+        self.assertEqual(storage.count(), len(storage.all()))
+        self.assertEqual(storage.count(State), len(storage.all(State)))
+        self.assertEqual(storage.count(City), len(storage.all(City)))
+        self.assertEqual(storage.count(Amenity), len(storage.all(Amenity)))
+        self.assertEqual(storage.count(User), len(storage.all(User)))
+        self.assertEqual(storage.count(Place), len(storage.all(Place)))
+
+    @unittest.skipIf(models.storage_t != 'db', "not testing file storage")
+    def test_count_error(self):
+        storage = DBStorage()
+        storage.reload()
+        with self.assertRaises(TypeError):
+            x = storage.count(State, "extra arg")
 
 
 class TestFileStorage(unittest.TestCase):
