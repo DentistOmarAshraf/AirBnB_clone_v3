@@ -3,10 +3,11 @@
 Rest API Master
 """
 
-from flask import Flask
+from flask import Flask, make_response
 from .views import app_views
 from os import getenv
 from models import storage
+import json
 
 
 app = Flask(__name__)
@@ -18,6 +19,16 @@ app.register_blueprint(app_views)
 def close_db(exceptions):
     """remove DB session"""
     storage.close()
+
+
+@app.errorhandler(404)
+def handle(error):
+    data = {
+            "error": "Not found"
+            }
+    res = make_response(json.dumps(data, indent=4), 404)
+    res.headers['Content-type'] = 'application/json'
+    return res
 
 
 if __name__ == "__main__":
