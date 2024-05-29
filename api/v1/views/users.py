@@ -67,11 +67,11 @@ def user_about(user_id=None):
                     to_ret = usr.to_dict()
                     storage.save()
 
-                if change is False:
-                    abort(404)
-                res = make_response(dumps(to_ret, indent=4), 200)
-                res.headers['Content-type'] = 'application/json'
-                return res
+            if change is False:
+                abort(404)
+            res = make_response(dumps(to_ret, indent=4), 200)
+            res.headers['Content-type'] = 'application/json'
+            return res
 
         if request.method == "DELETE":
             found = False
