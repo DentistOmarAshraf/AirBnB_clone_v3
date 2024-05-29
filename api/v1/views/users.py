@@ -60,7 +60,7 @@ def user_about(user_id=None):
             for usr in storage.all(User).values():
                 if usr.id == user_id:
                     for k, v in data.items():
-                        x = ['id', 'created_at', 'updated_at']
+                        x = ['id', 'created_at', 'updated_at', 'email']
                         if k not in x:
                             setattr(usr, k, v)
                     change = True
