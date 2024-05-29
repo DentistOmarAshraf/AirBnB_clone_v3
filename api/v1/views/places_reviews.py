@@ -106,9 +106,11 @@ def review_about(review_id=None):
                 data = request.get_json()
             except Exception:
                 return make_response("Not a JSON", 400)
-            
+
             if 'text' not in data:
                 return make_response("Missing text", 400)
+            if 'user_id' not in data:
+                return make_response("Missing user_id", 400)
 
             change = False
             for rev in storage.all(Review).values():
