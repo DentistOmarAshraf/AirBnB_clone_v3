@@ -26,9 +26,9 @@ def user_about(user_id=None):
             except Exception:
                 return make_response("Not a JSON", 400)
 
-            if 'email' not in data.keys():
+            if 'email' not in data:
                 return make_response("Missing email", 400)
-            if 'password' not in data.keys():
+            if 'password' not in data:
                 return make_response("Missing password", 400)
 
             new_usr = User(**data)
