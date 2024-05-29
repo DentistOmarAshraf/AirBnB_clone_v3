@@ -2,6 +2,8 @@
 """ holds class User"""
 import models
 from models.base_model import BaseModel, Base
+from models.place import Place
+from models.review import Review
 from os import getenv
 import sqlalchemy
 from sqlalchemy import Column, String
@@ -23,6 +25,24 @@ class User(BaseModel, Base):
         password = ""
         first_name = ""
         last_name = ""
+
+        @property
+        def places(self):
+            to_ret = []
+            all_places = models.storage.all(Place).values()
+            for place in all_places:
+                if self.id == place.user_id:
+                    to_ret.append(place)
+            return to_ret
+
+        @property
+        def reviews(self):
+            to_ret = []
+            all_reviews = models.storage.all(Review).values()
+            for review in all_reviews:
+                if review.user_id == self.id:
+                    to_ret.append(review)
+            return to_ret
 
     def __init__(self, *args, **kwargs):
         """initializes user"""
