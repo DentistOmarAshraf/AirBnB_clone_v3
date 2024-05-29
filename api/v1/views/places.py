@@ -120,6 +120,6 @@ def place_in_city(city_id=None):
         to_ret = the_place.to_dict()
         if 'cities' in to_ret:
             del (to_ret['cities'])
-        res = make_response(dumps(to_ret, indent=4), 200)
+        res = make_response(dumps(to_ret, indent=4), 201)
         res.headers['Content-type'] = 'application/json'
         return res
