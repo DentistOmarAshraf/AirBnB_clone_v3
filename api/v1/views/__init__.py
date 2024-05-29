@@ -7,3 +7,4 @@ app_views = Blueprint('blueprint', __name__, url_prefix='/api/v1')
 from .index import *
 from .states import *
 from .cities import *
+from .amenities import *
