@@ -31,7 +31,7 @@ def amenity_about(amenity_id=None):
 
             new_amen = Amenity(**data)
             new_amen.save()
-            res = make_response(dumps(new_amen.to_dict(), indent=4), 200)
+            res = make_response(dumps(new_amen.to_dict(), indent=4), 201)
             res.headers['Content-type'] = 'application/json'
             return res
 
