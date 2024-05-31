@@ -107,7 +107,6 @@ def place_in_city(city_id=None):
         user.places.append(the_place)
         the_place.save()
         to_ret = the_place.to_dict()
-        print(to_ret)
         if 'cities' in to_ret:
             del (to_ret['cities'])
         if 'user' in to_ret:

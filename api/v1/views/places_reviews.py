@@ -16,15 +16,12 @@ from flask import abort, make_response, request
                  methods=['GET', 'POST'])
 def place_rev(place_id=None):
     if request.method == "GET":
-        data = []
-        found = False
-        for place in storage.all(Place).values():
-            if place_id == place.id:
-                for rev in place.reviews:
-                    data.append(rev.to_dict())
-                found = True
-        if found is False:
+        place = storage.get(Place, place_id)
+        if place is None:
             abort(404)
+        data = []
+        for rev in place.reviews:
+            data.append(rev.to_dict())
         res = make_response(dumps(data, indent=4), 200)
         res.headers['Content-type'] = 'application/json'
         return res
@@ -40,20 +37,12 @@ def place_rev(place_id=None):
         if 'text' not in data:
             return make_response("Missing text", 400)
 
-        found = False
-        for place in storage.all(Place).values():
-            if place_id == place.id:
-                found = True
-                the_place = place
-        if found is False:
+        the_place = storage.get(Place, place_id)
+        if the_place is None:
             abort(404)
 
-        found = False
-        for user in storage.all(User).values():
-            if data['user_id'] == user.id:
-                found = True
-                the_user = user
-        if found is False:
+        the_user = storage.get(User, data['user_id'])
+        if the_user is None:
             abort(404)
 
         the_rev = Review(**data)
@@ -76,27 +65,21 @@ def place_rev(place_id=None):
 def review_about(review_id=None):
     if review_id:
         if request.method == "GET":
-            data = []
-            for rev in storage.all(Review).values():
-                if rev.id == review_id:
-                    data.append(rev.to_dict())
-
-            if len(data) == 0:
+            data = storage.get(Review, review_id)
+            if data is None:
                 abort(404)
-
-            res = make_response(dumps(data[0], indent=4), 200)
+            data = data.to_dict()
+            res = make_response(dumps(data, indent=4), 200)
             res.headers['Content-type'] = 'application/json'
             return res
 
         if request.method == "DELETE":
-            dlt = False
-            for rev in storage.all(Review).values():
-                if rev.id == review_id:
-                    storage.delete(rev)
-                    storage.save()
-                    dlt = True
-            if dlt is False:
+            rev = storage.get(Review, review_id)
+            if rev is None:
                 abort(404)
+
+            storage.delete(rev)
+            storage.save()
             res = make_response(dumps({}), 200)
             res.headers['Content-type'] = 'application/json'
             return res
@@ -110,20 +93,21 @@ def review_about(review_id=None):
             if 'text' not in data:
                 return make_response("Missing text", 400)
 
+            rev = storage.get(Review, review_id)
+            if rev is None:
+                abort(404)
+
             change = False
-            for rev in storage.all(Review).values():
-                if rev.id == review_id:
-                    for k, v in data.items():
-                        x = ['id', 'user_id', 'created_at', 'updated_at']
-                        if k not in x:
-                            setattr(rev, k, v)
+            for k, v in data.items():
+                x = ['id', 'user_id', 'created_at', 'updated_at']
+                if k not in x:
+                    setattr(rev, k, v)
                     change = True
-                    rev.save()
-                    to_ret = rev.to_dict()
+            if change is False:
+                abort(404)
 
-                if change is False:
-                    abort(404)
-
-                res = make_response(dumps(to_ret, indent=4), 200)
-                res.headers['Content-type'] = 'application/json'
-                return res
+            rev.save()
+            to_ret = rev.to_dict()
+            res = make_response(dumps(to_ret, indent=4), 200)
+            res.headers['Content-type'] = 'application/json'
+            return res
