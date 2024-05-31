@@ -35,28 +35,21 @@ def about_states(state_id=None):
 
     else:
         if request.method == 'GET':
-            data = []
-            for state in storage.all(State).values():
-                if state_id == state.id:
-                    data.append(state.to_dict())
-            if len(data) == 0:
+            data = storage.get(State, state_id)
+            if data is None:
                 abort(404)
-            res = make_response(json.dumps(data[0], indent=3), 200)
+            res = make_response(json.dumps(data.to_dict(), indent=3), 200)
             res.headers['Content-type'] = 'application/json'
             return res
 
         if request.method == 'DELETE':
-            deleted = False
-            for state in storage.all(State).values():
-                if state_id == state.id:
-                    for city in state.cities:
-                        storage.delete(city)
-                    storage.delete(state)
-                    storage.save()
-                    deleted = True
-                    break
-            if deleted is False:
+            state = storage.get(State, state_id)
+            if state is None:
                 abort(404)
+            for city in state.cities:
+                storage.delete(city)
+            storage.delete(state)
+            storage.save()
             res = make_response(json.dumps({}), 200)
             res.headers['Content-type'] = 'application/json'
             return res
@@ -67,18 +60,19 @@ def about_states(state_id=None):
             except Exception:
                 return make_response("Not a JSON", 400)
 
-            changed = False
-            for state in storage.all(State).values():
-                if state_id == state.id:
-                    for k, v in data.items():
-                        x = ['id', 'created_at', 'updated_at']
-                        if k not in x:
-                            setattr(state, k, v)
-                    changed = True
-                    to_ret = state.to_dict()
-                    storage.save()
-            if changed is False:
+            state = storage.get(State, state_id)
+            if state is None:
                 abort(404)
+            changed = False
+            for k, v in data.items():
+                x = ['id', 'created_at', 'updated_at']
+                if k not in x:
+                    setattr(state, k, v)
+                    changed = True
+            if changed is False:
+                abort(400)
+            to_ret = state.to_dict()
+            storage.save()
             res = make_response(json.dumps(to_ret, indent=3), 200)
             res.headers['Content-type'] = 'application/json'
             return res
