@@ -39,14 +39,12 @@ def user_about(user_id=None):
 
     else:
         if request.method == "GET":
-            data = []
-            for usr in storage.all(User).values():
-                if usr.id == user_id:
-                    data.append(usr.to_dict())
-            if len(data) == 0:
+            data = storage.get(User, user_id)
+            if data is None:
                 abort(404)
+            data = data.to_dict()
 
-            res = make_response(dumps(data[0], indent=3), 200)
+            res = make_response(dumps(data, indent=3), 200)
             res.headers['Content-type'] = 'application/json'
             return res
 
@@ -56,32 +54,29 @@ def user_about(user_id=None):
             except Exception:
                 return make_response("Not a JSON", 400)
 
-            change = False
-            for usr in storage.all(User).values():
-                if usr.id == user_id:
-                    for k, v in data.items():
-                        x = ['id', 'created_at', 'updated_at', 'email']
-                        if k not in x:
-                            setattr(usr, k, v)
-                    change = True
-                    to_ret = usr.to_dict()
-                    storage.save()
-
-            if change is False:
+            usr = storage.get(User, user_id)
+            if usr is None:
                 abort(404)
+            change = False
+            for k, v in data.items():
+                x = ['id', 'email', 'created_at', 'updated_at']
+                if k not in x:
+                    setattr(usr, k, v)
+                    change = True
+            if change is False:
+                abort(400)
+            storage.save()
+            to_ret = usr.to_dict()
             res = make_response(dumps(to_ret, indent=4), 200)
             res.headers['Content-type'] = 'application/json'
             return res
 
         if request.method == "DELETE":
-            found = False
-            for usr in storage.all(User).values():
-                if usr.id == user_id:
-                    found = True
-                    storage.delete(usr)
-                    storage.save()
-            if found is False:
+            usr = storage.get(User, user_id)
+            if usr is None:
                 abort(404)
+            storage.delete(usr)
+            storage.save()
 
             res = make_response(dumps({}), 200)
             res.headers['Content-type'] = 'application/json'
