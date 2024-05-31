@@ -27,9 +27,9 @@ def place_amenity(place_id=None, amenity_id=None):
             to_ret = []
             for amenity in place.amenities:
                 to_ret.append(amenity.to_dict())
-        res = make_response(dumps(to_ret, indent=3), 200)
-        res.headers['Content-type'] = 'application/json'
-        return res
+            res = make_response(dumps(to_ret, indent=3), 200)
+            res.headers['Content-type'] = 'application/json'
+            return res
 
     else:
         if request.method == "GET":
