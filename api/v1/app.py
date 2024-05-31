@@ -4,6 +4,7 @@ Rest API Master
 """
 
 from flask import Flask, make_response
+from flask_cors import CORS
 from .views import app_views
 from os import getenv
 from models import storage
@@ -13,6 +14,7 @@ import json
 app = Flask(__name__)
 
 app.register_blueprint(app_views)
+CORS(app, origins=["0.0.0.0"])
 
 
 @app.teardown_appcontext
