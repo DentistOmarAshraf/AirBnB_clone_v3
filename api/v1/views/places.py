@@ -25,25 +25,22 @@ def place_about(place_id=None):
 
     else:
         if request.method == 'GET':
-            data = []
-            for place in storage.all(Place).values():
-                if place.id == place_id:
-                    data.append(place.to_dict())
-            if len(data) == 0:
+            data = storage.get(Place, place_id)
+            if data is None:
                 abort(404)
-            res = make_response(dumps(data[0], indent=4), 200)
+            data = data.to_dict()
+            res = make_response(dumps(data, indent=4), 200)
             res.headers['Content-type'] = 'application/json'
             return res
 
         if request.method == 'DELETE':
-            dlt = False
-            for place in storage.all(Place).values():
-                if place_id == place.id:
-                    dlt = True
-                    storage.delete(place)
-                    storage.save()
-            if dlt is False:
+            place = storage.get(Place, place_id)
+            if place is None:
                 abort(404)
+            for review in place.reviews:
+                storage.delete(review)
+            storage.delete(place)
+            storage.save()
             res = make_response(dumps({}), 200)
             res.headers['Content-type'] = 'application/json'
             return res
@@ -54,19 +51,21 @@ def place_about(place_id=None):
             except Exception:
                 return make_response("Not a JSON", 400)
 
+            place = storage.get(Place, place_id)
+            if place is None:
+                abort(404)
+
             found = False
-            for place in storage.all(Place).values():
-                if place_id == place.id:
+            for k, v in data.items():
+                x = ['id', 'user_id', 'city_id', 'created_at', 'updated_at']
+                if k not in x:
+                    setattr(place, k, v)
                     found = True
-                    for k, v in data.items():
-                        x = ['id', 'user_id', 'city_id', 'created_at',
-                             'updated_at']
-                        if k not in x:
-                            setattr(place, k, v)
-                    to_ret = place.to_dict()
-                    storage.save()
             if found is False:
                 abort(404)
+
+            to_ret = place.to_dict()
+            storage.save()
             res = make_response(dumps(to_ret, indent=4), 200)
             res.headers['Content-type'] = 'application/json'
             return res
@@ -76,13 +75,10 @@ def place_about(place_id=None):
                  methods=['GET', 'POST'])
 def place_in_city(city_id=None):
     if request.method == 'GET':
-        found = False
-        for city in storage.all(City).values():
-            if city_id == city.id:
-                found = True
-                dt = city.places
-        if found is False:
+        city = storage.get(City, city_id)
+        if city is None:
             abort(404)
+        dt = city.places
         dt = [x.to_dict() for x in dt]
         res = make_response(dumps(dt, indent=4), 200)
         res.headers['Content-type'] = 'application/json'
@@ -99,27 +95,23 @@ def place_in_city(city_id=None):
         if 'name' not in data:
             return make_response("Missing name", 400)
 
-        found = False
-        for city in storage.all(City).values():
-            if city_id == city.id:
-                found = True
-                the_city = city
-        if found is False:
+        city = storage.get(City, city_id)
+        if city is None:
             abort(404)
-
-        found = False
-        for user in storage.all(User).values():
-            if data["user_id"] == user.id:
-                found = True
-        if found is False:
+        user = storage.get(User, data["user_id"])
+        if user is None:
             abort(404)
 
         the_place = Place(**data)
-        the_city.places.append(the_place)
+        city.places.append(the_place)
+        user.places.append(the_place)
         the_place.save()
         to_ret = the_place.to_dict()
+        print(to_ret)
         if 'cities' in to_ret:
             del (to_ret['cities'])
+        if 'user' in to_ret:
+            del (to_ret['user'])
         res = make_response(dumps(to_ret, indent=4), 201)
         res.headers['Content-type'] = 'application/json'
         return res
