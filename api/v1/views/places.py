@@ -12,12 +12,12 @@ from models.user import User
 from json import dumps
 
 
-@app_views.route("/places", strict_slashes=False, methods=['GET'])
+@app_views.route("/places", strict_slashes=False, methods=['GET', 'POST'])
 @app_views.route("/places/<place_id>", strict_slashes=False,
                  methods=['GET', 'DELETE', 'PUT'])
 def place_about(place_id=None):
     if not place_id:
-        if request.method == 'GET':
+        if request.method == 'GET' or request.method == 'POST':
             data = [place.to_dict() for place in storage.all(Place).values()]
             res = make_response(dumps(data, indent=4), 200)
             res.headers['Content-type'] = 'application/json'
@@ -74,6 +74,7 @@ def place_about(place_id=None):
 @app_views.route("/cities/<city_id>/places", strict_slashes=False,
                  methods=['GET', 'POST'])
 def place_in_city(city_id=None):
+    print(request.method)
     if request.method == 'GET':
         city = storage.get(City, city_id)
         if city is None:
@@ -114,3 +115,52 @@ def place_in_city(city_id=None):
         res = make_response(dumps(to_ret, indent=4), 201)
         res.headers['Content-type'] = 'application/json'
         return res
+
+
+@app_views.route("/places_search", strict_slashes=False, methods=['POST'])
+def place_search():
+    try:
+        data = request.get_json()
+    except Exception:
+        return make_response("Not a JSON", 400)
+
+    if len(data) == 0:
+        return make_response(place_about(place_id=None))
+
+    empty = True
+    for k, v in data.items():
+        if len(v) > 0:
+            empty = False
+            break
+    if empty:
+        return make_response(place_about(place_id=None))
+
+    to_ret = []
+    for key, val in data.items():
+        if key == 'states':
+            for st_id in val:
+                the_state = storage.get(State, st_id)
+                for city in the_state.cities:
+                    for place in city.places:
+                        if place not in to_ret:
+                            to_ret.append(place)
+        if key == 'cities':
+            for ct_id in val:
+                the_city = storage.get(City, st_id)
+                for place in city.places:
+                    if place not in to_ret:
+                        to_ret.append(place)
+
+        if key == 'amenities' and len(val) != 0:
+            for amen_id in val:
+                the_amen = storage.get(Amenity, amen_id)
+                for place in to_ret:
+                    if the_amen in place.amenities:
+                        continue
+                    else:
+                        to_ret.remove(place)
+
+    to_ret = [x.to_dict() for x in to_ret]
+    res = make_response(dumps(to_ret, indent=4), 200)
+    res.headers['Content-type'] = 'application/json'
+    return res
