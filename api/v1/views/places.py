@@ -121,6 +121,7 @@ def place_in_city(city_id=None):
 
 @app_views.route("/places_search", strict_slashes=False, methods=['POST'])
 def place_search():
+    """ THIS ROUTE IS WORKING WRONG I WILL MODIFY IT LATER"""
     try:
         data = request.get_json()
     except Exception:
