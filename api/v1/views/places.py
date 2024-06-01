@@ -9,6 +9,8 @@ from models import storage
 from models.place import Place
 from models.city import City
 from models.user import User
+from models.state import State
+from models.amenity import Amenity
 from json import dumps
 
 
@@ -140,6 +142,8 @@ def place_search():
         if key == 'states':
             for st_id in val:
                 the_state = storage.get(State, st_id)
+                if the_state is None:
+                    continue
                 for city in the_state.cities:
                     for place in city.places:
                         if place not in to_ret:
@@ -147,6 +151,8 @@ def place_search():
         if key == 'cities':
             for ct_id in val:
                 the_city = storage.get(City, st_id)
+                if the_city is None:
+                    continue
                 for place in city.places:
                     if place not in to_ret:
                         to_ret.append(place)
@@ -154,6 +160,8 @@ def place_search():
         if key == 'amenities' and len(val) != 0:
             for amen_id in val:
                 the_amen = storage.get(Amenity, amen_id)
+                if the_amen is None:
+                    continue
                 for place in to_ret:
                     if the_amen in place.amenities:
                         continue
