@@ -124,55 +124,51 @@ def post_places(city_id):
 
 @app_views.route("/places_search", strict_slashes=False, methods=['POST'])
 def place_search():
-    """ THIS ROUTE IS WORKING WRONG I WILL MODIFY IT LATER"""
+    """ MAY BE SOLVED"""
     try:
         data = request.get_json()
     except Exception:
         return make_response("Not a JSON", 400)
 
     if len(data) == 0:
-        return make_response(place_about(place_id=None))
-
-    empty = True
-    for k, v in data.items():
-        if len(v) > 0:
-            empty = False
-            break
-    if empty:
-        return make_response(place_about(place_id=None))
+        return make_response(get_places())
 
     to_ret = []
-    for key, val in data.items():
-        if key == 'states':
-            for st_id in val:
-                the_state = storage.get(State, st_id)
-                if the_state is None:
-                    continue
-                for city in the_state.cities:
-                    for place in city.places:
-                        if place not in to_ret:
-                            to_ret.append(place)
-        if key == 'cities':
-            for ct_id in val:
-                the_city = storage.get(City, st_id)
-                if the_city is None:
-                    continue
+    if "states" not in data.items():
+        to_ret += get_places().get_json()
+
+    for key, value in data.items():
+        if key == "states":
+            if len(value) == 0:
+                to_ret += get_places().get_json()
+            else:
+                for state_id in value:
+                    state = storage.get(State, state_id)
+                    for city in state.cities:
+                        for place in city.places:
+                            if place not in to_ret:
+                                to_ret.append(place.to_dict())
+
+        if key == "cities":
+            for city_id in value:
+                city = storage.get(City, city_id)
                 for place in city.places:
-                    if place not in to_ret:
-                        to_ret.append(place)
+                    if place.to_dict() not in to_ret:
+                        to_ret.append(place.to_dict())
 
-        if key == 'amenities' and len(val) != 0:
-            for amen_id in val:
-                the_amen = storage.get(Amenity, amen_id)
-                if the_amen is None:
-                    continue
-                for place in to_ret:
-                    if the_amen in place.amenities:
-                        continue
-                    else:
-                        to_ret.remove(place)
+        if key == "amenities":
+            to_rem = []
+            for amen_id in value:
+                amen = storage.get(Amenity, amen_id)
+                for place_dic in to_ret:
+                    place = storage.get(Place, place_dic["id"])
+                    if amen not in place.amenities:
+                        to_rem.append(place_dic)
 
-    to_ret = [x.to_dict() for x in to_ret]
+            for x in to_rem:
+                if x in to_ret:
+                    to_ret.remove(x)
+
     res = make_response(dumps(to_ret, indent=4), 200)
     res.headers['Content-type'] = 'application/json'
     return res
