@@ -134,7 +134,10 @@ def place_search():
         return make_response(get_places())
 
     to_ret = []
-    if "states" not in data.items():
+    print("cities" not in data.keys())
+    if "states" not in data.keys() and \
+            "cities" not in data.keys() and \
+            "amenities" not in data.keys():
         to_ret += get_places().get_json()
 
     for key, value in data.items():
